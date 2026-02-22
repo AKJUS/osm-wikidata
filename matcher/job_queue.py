@@ -6,6 +6,7 @@ import re
 import subprocess
 import traceback
 import typing
+from datetime import datetime, timedelta, timezone
 from time import sleep, time
 
 import lxml.etree
@@ -20,6 +21,7 @@ from matcher.view import app
 re_point = re.compile(r"^Point\(([-E0-9.]+) ([-E0-9.]+)\)$")
 
 NOTIFY_MAX_BYTES = 7900  # PostgreSQL NOTIFY payload limit is 8000 bytes
+WIKIDATA_ITEMS_MAX_AGE = timedelta(hours=24)  # reuse cached items within this window
 
 
 class Chunk(typing.TypedDict):
@@ -184,9 +186,13 @@ class MatcherJob:
         database.session.commit()
         assert not self.place.gis_tables & set(database.get_tables())
 
-    def prepare_for_refresh(self) -> None:
+    def prepare_for_refresh(self, is_refresh: bool = False) -> None:
         """Prepare for refresh."""
         assert self.place
+        if is_refresh:
+            # User explicitly requested a fresh run — discard the cached timestamp
+            # so wikidata items are re-fetched from scratch.
+            self.place.wikidata_items_retrieved_at = None
         self.place.delete_overpass()
         self.place.reset_all_items_to_not_done()
         self.drop_database_tables()
@@ -275,12 +281,18 @@ class MatcherJob:
         assert self.place
         place = self.place
 
-        self.get_items()
+        if self._wikidata_items_are_fresh():
+            self.status("using existing Wikidata items from recent run")
+        else:
+            self.get_items()
+            db_items = {item.qid: item for item in self.place.items}
+            self.get_item_detail(db_items)
+            self.place.wikidata_items_retrieved_at = datetime.now(timezone.utc)
+            database.session.commit()
+
         db_items = {item.qid: item for item in self.place.items}
         item_count = len(db_items)
         self.status("{:,d} Wikidata items found".format(item_count))
-
-        self.get_item_detail(db_items)
 
         chunk_size = 96 if self.want_isa else None
         skip = {"building", "building=yes"} if self.want_isa else set()
@@ -334,7 +346,7 @@ class MatcherJob:
 
         self.log_file = run_obj.open_log_for_writes()
 
-        self.prepare_for_refresh()
+        self.prepare_for_refresh(is_refresh=is_refresh)
         self.matcher()
 
         run_obj.complete()
@@ -345,6 +357,17 @@ class MatcherJob:
         print("sending done")
         self.send("done")
         print("done sent")
+
+    def _wikidata_items_are_fresh(self) -> bool:
+        """Return True if wikidata items were fetched recently and exist in the DB."""
+        assert self.place
+        retrieved_at = self.place.wikidata_items_retrieved_at
+        if retrieved_at is None:
+            return False
+        age = datetime.now(timezone.utc) - retrieved_at.replace(tzinfo=timezone.utc)
+        if age > WIKIDATA_ITEMS_MAX_AGE:
+            return False
+        return self.place.items.count() > 0
 
     def handle_rate_limited(self, exc: wikidata_api.QueryRateLimited) -> None:
         """Handle a 429 rate-limit response from the Wikidata Query Service."""

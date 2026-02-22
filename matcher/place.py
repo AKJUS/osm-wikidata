@@ -155,6 +155,7 @@ class Place(Base):
     wikidata_query_timeout = Column(Boolean, default=False)
     wikidata = Column(String)
     item_types_retrieved = Column(Boolean, default=False)
+    wikidata_items_retrieved_at = Column(DateTime)
     index_hide = Column(Boolean, default=False)
     overpass_is_in = deferred(Column(JSON))
     existing_wikidata = deferred(Column(JSON))
