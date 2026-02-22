@@ -54,3 +54,77 @@
   background: yellow;
   padding: 3px;
 }
+
+/* ── OWL Places navbar ─────────────────────────────────── */
+
+.navbar.bg-primary {
+  background-color: #1a2035 !important;
+  border-bottom: 2px solid #c8973e;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #e8dcc8 !important;
+}
+
+.brand-owl {
+  color: #c8973e;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(232, 220, 200, 0.75);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link:focus {
+  color: #c8973e;
+}
+
+.navbar-dark .navbar-nav .active > .nav-link,
+.navbar-dark .navbar-nav .nav-link.active {
+  color: #c8973e;
+}
+
+.navbar-dark .navbar-toggler {
+  border-color: rgba(200, 151, 62, 0.4);
+}
+
+.navbar-dark .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(200,151,62,0.85)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Navbar search input */
+.navbar .form-control {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(200, 151, 62, 0.3);
+  color: #e8dcc8;
+}
+
+.navbar .form-control::placeholder {
+  color: rgba(232, 220, 200, 0.35);
+}
+
+.navbar .form-control:focus {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: #c8973e;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Dropdown */
+.navbar-dark .dropdown-menu {
+  background-color: #232c47;
+  border: 1px solid rgba(200, 151, 62, 0.2);
+  border-top: 2px solid #c8973e;
+}
+
+.navbar-dark .dropdown-item {
+  color: rgba(232, 220, 200, 0.8);
+}
+
+.navbar-dark .dropdown-item:hover,
+.navbar-dark .dropdown-item:focus {
+  background-color: rgba(200, 151, 62, 0.12);
+  color: #c8973e;
+}

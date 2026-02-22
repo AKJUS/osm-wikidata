@@ -1,21 +1,278 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="container">
+{% block style %}
+<style>
+/* ── Results header strip ──────────────────────────────── */
 
-  <form action="{{ url_for_index }}"  class="form-inline m-2">
-    <label for="q" class="sr-only">search:</label>
-    <input class="form-control m-2" id="q" name="q" size="60" value="{{ q }}" placeholder="place name">
-    <input type="submit" class="btn btn-success" value="search">
-  </form>
+#results-bar {
+  background: #1a2035;
+  border-bottom: 2px solid #c8973e;
+  padding: .9rem 0;
+}
+
+.results-search {
+  display: flex;
+  max-width: 560px;
+}
+
+.results-search input[type="text"] {
+  flex: 1;
+  background: rgba(255,255,255,.08);
+  border: 1.5px solid rgba(200,151,62,.35);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  color: #fff;
+  font-size: .95rem;
+  padding: .45rem .9rem;
+}
+
+.results-search input[type="text"]::placeholder { color: rgba(232,220,200,.3); }
+
+.results-search input[type="text"]:focus {
+  outline: none;
+  background: rgba(255,255,255,.13);
+  border-color: #c8973e;
+}
+
+.results-search button {
+  background: #c8973e;
+  border: 1.5px solid #c8973e;
+  border-radius: 0 4px 4px 0;
+  color: #1a2035;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .07em;
+  padding: .45rem 1.1rem;
+  transition: background .15s;
+  white-space: nowrap;
+}
+
+.results-search button:hover { background: #dba94e; border-color: #dba94e; }
+
+.results-count {
+  font-size: .78rem;
+  color: rgba(232,220,200,.55);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .04em;
+  margin-top: .45rem;
+}
+
+/* ── Result cards ──────────────────────────────────────── */
+
+.result-card {
+  background: #fff;
+  border: 1px solid #e4dfd6;
+  border-radius: 6px;
+  border-left: 4px solid #dee2e6;
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+
+.result-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.09); }
+
+.result-card.state-ready   { border-left-color: #28a745; }
+.result-card.state-runnable { border-left-color: #c8973e; }
+.result-card.state-blocked  { border-left-color: #ced4da; }
+
+.result-card .card-banner img {
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.result-card .card-body { padding: 1rem 1.1rem .9rem; }
+
+/* Place name */
+.result-name {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a2035;
+  margin-bottom: .15rem;
+  line-height: 1.25;
+}
+
+.result-name a { color: #1a2035; text-decoration: none; }
+.result-name a:hover { color: #c8973e; }
+
+/* Location context (everything after first comma) */
+.result-location {
+  font-size: .78rem;
+  color: #888;
+  margin-bottom: .6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Meta pills */
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin-bottom: .75rem;
+}
+
+.meta-pill {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  letter-spacing: .04em;
+  padding: .2rem .5rem;
+  border-radius: 3px;
+  border: 1px solid #e0dbd0;
+  color: #555;
+  background: #faf8f5;
+  white-space: nowrap;
+}
+
+.meta-pill.pill-type { border-color: #c8973e33; color: #8a6220; background: #fdf6ea; }
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: .2rem .55rem;
+  border-radius: 3px;
+  font-weight: 500;
+  margin-bottom: .75rem;
+}
+
+.badge-ready    { background: #d4edda; color: #155724; }
+.badge-runnable { background: #fff3cd; color: #7a5000; }
+.badge-blocked  { background: #f0f0f0; color: #666;    }
+
+/* Action row */
+.result-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+.btn-run {
+  background: #c8973e;
+  border: none;
+  border-radius: 4px;
+  color: #1a2035;
+  font-family: 'DM Mono', monospace;
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+  padding: .38rem .9rem;
+  text-decoration: none;
+  transition: background .15s;
+  display: inline-block;
+}
+
+.btn-run:hover { background: #dba94e; color: #1a2035; text-decoration: none; }
+
+.btn-view {
+  background: #1a2035;
+  border: none;
+  border-radius: 4px;
+  color: #e8dcc8;
+  font-family: 'DM Mono', monospace;
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+  padding: .38rem .9rem;
+  text-decoration: none;
+  transition: background .15s;
+  display: inline-block;
+}
+
+.btn-view:hover { background: #232c47; color: #e8dcc8; text-decoration: none; }
+
+.btn-browse {
+  background: transparent;
+  border: 1.5px solid #c8973e;
+  border-radius: 4px;
+  color: #c8973e;
+  font-family: 'DM Mono', monospace;
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+  padding: .33rem .85rem;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  display: inline-block;
+}
+
+.btn-browse:hover {
+  background: #c8973e;
+  color: #1a2035;
+  text-decoration: none;
+}
+
+.link-osm {
+  font-size: .75rem;
+  color: #999;
+  text-decoration: none;
+  margin-left: .25rem;
+}
+
+.link-osm:hover { color: #c8973e; text-decoration: none; }
+
+.reason-note {
+  font-size: .78rem;
+  color: #888;
+  margin-bottom: .5rem;
+}
+
+.reason-note a { color: #c8973e; }
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #999;
+}
+
+.no-results-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: .35; }
+
+.no-results p { font-size: .95rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="results-bar">
+  <div class="container">
+    <form action="{{ url_for('search_results') }}" class="results-search">
+      <label for="q" class="sr-only">Search for a place</label>
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="Search for a place…" autocomplete="off">
+      <button type="submit"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+    </form>
+    {% if q %}
+    <div class="results-count">
+      {% if results | count == 0 %}
+        no results for &ldquo;{{ q }}&rdquo;
+      {% elif results | count == 1 %}
+        1 place found for &ldquo;{{ q }}&rdquo;
+      {% else %}
+        {{ results | count }} places found for &ldquo;{{ q }}&rdquo;
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container py-4">
+  {% include "flash_msg.html" %}
 
   {% if q %}
-      {% if results | count == 0 %}
-        <p>no matches found</p>
-      {% else %}
-        {% include "search_results.html" with context %}
-      {% endif %}
+    {% if results | count == 0 %}
+      <div class="no-results">
+        <div class="no-results-icon"><i class="fa fa-map-o" aria-hidden="true"></i></div>
+        <p>No places found for <strong>{{ q }}</strong>.</p>
+        <p>Try a different spelling, or search for a larger area.</p>
+      </div>
+    {% else %}
+      {% include "search_results.html" with context %}
+    {% endif %}
   {% endif %}
-
 </div>
+
 {% endblock %}

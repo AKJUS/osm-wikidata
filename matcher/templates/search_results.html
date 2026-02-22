@@ -1,56 +1,88 @@
-<p>
-Searching for <em>{{ q }}</em> found {{ results | count }} places.
-Select one to start matching.
-</p>
-
 {% for hit in results %}
-  {% set banner = hit.banner() %}
+  {% set banner      = hit.banner() %}
+  {% set reason      = hit.reason_matcher_not_allowed() %}
+  {% set place_name  = hit.display_name.split(',')[0] %}
+  {% set location    = hit.display_name.split(',', 1)[1].strip() if ',' in hit.display_name else '' %}
 
-  <div class="card my-2">
-  {% if banner %}
-    <a href="{{ hit.banner_link() }}"><img src="{{ banner }}" class="card-img-top" /></a>
+  {% if hit.ready %}
+    {% set card_state = 'state-ready' %}
+    {% set badge_cls  = 'badge-ready' %}
+    {% set badge_text = 'Matched' %}
+  {% elif hit.matcher_allowed %}
+    {% set card_state = 'state-runnable' %}
+    {% set badge_cls  = 'badge-runnable' %}
+    {% set badge_text = 'Not yet matched' %}
+  {% else %}
+    {% set card_state = 'state-blocked' %}
+    {% set badge_cls  = 'badge-blocked' %}
+    {% set badge_text = 'Not available' %}
   {% endif %}
 
+  <div class="result-card {{ card_state }} mb-3">
+
+    {% if banner %}
+    <div class="card-banner">
+      <a href="{{ hit.banner_link() }}">
+        <img src="{{ banner }}" alt="{{ place_name }}">
+      </a>
+    </div>
+    {% endif %}
+
     <div class="card-body">
-      <h5 class="card-title">
+
+      <div class="result-name">
         {% if hit.ready %}
-          <a href="{{ hit.url }}">{{ hit.name }}</a>
+          <a href="{{ hit.url }}">{{ place_name }}</a>
         {% else %}
-          {{ hit.name }}
+          {{ place_name }}
         {% endif %}
-      </h5>
-      <p class="card-text">
-      <ul class="list-inline">
-        <li class="list-inline-item"><big>{{ hit.osm_type }}</big></li>
-
-      {% if hit.osm_type in ('way', 'relation') and hit.area %}
-        <li class="list-inline-item">area: <big>{{ '{:,.1f}'.format(hit.area) }} km&sup2;</big></li>
-      {% endif %}
-      <li class="list-inline-item">category: <big>{{ hit.category }}</big></li>
-      <li class="list-inline-item">type: <big>{{ hit.type }}</big></li>
-      <li class="list-inline-item">
-        <a href="{{ hit.osm_url }}" target="_blank">view on OpenStreetMap <i class="fa fa-external-link" aria-hidden="true"></i></a>
-      </li>
-      </ul>
-
-      {% set reason = hit.reason_matcher_not_allowed() %}
-      {% if reason %}
-        <p>[{{ reason }}]</p>
-        {% if 'too large' not in reason and ',' in hit.display_name %}
-          <p>Try searching for <a href="{{ hit.next_level_name_search() }}">{{ hit.next_level_name() }}</a> instead</p>
-        {% endif %}
-        </p>
-      {% endif %}
-      </p>
-      <div>
-      {% if not hit.ready and hit.matcher_allowed %}
-        <a href="{{ hit.next_state_url() }}" class="btn btn-primary">run matcher</a>
-      {% endif %}
-      {% if hit.show_browse_link() %}
-        <a href="{{ hit.browse_url() }}" class="btn btn-primary">browse subdivisions</a>
-      {% endif %}
       </div>
+
+      {% if location %}
+      <div class="result-location" title="{{ hit.display_name }}">{{ location }}</div>
+      {% endif %}
+
+      <div class="result-meta">
+        <span class="meta-pill">{{ hit.osm_type }}</span>
+        {% if hit.osm_type in ('way', 'relation') and hit.area %}
+          <span class="meta-pill">{{ '{:,.1f}'.format(hit.area) }}&thinsp;km&sup2;</span>
+        {% endif %}
+        <span class="meta-pill pill-type">{{ hit.category }} &middot; {{ hit.type }}</span>
+      </div>
+
+      <div class="status-badge {{ badge_cls }}">{{ badge_text }}</div>
+
+      {% if reason %}
+      <div class="reason-note">
+        {{ reason }}.
+        {% if 'too large' not in reason and ',' in hit.display_name %}
+          Try <a href="{{ hit.next_level_name_search() }}">{{ hit.next_level_name() }}</a> instead.
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="result-actions">
+        {% if hit.ready %}
+          <a href="{{ hit.url }}" class="btn-view">
+            <i class="fa fa-check-circle" aria-hidden="true"></i> View matches
+          </a>
+        {% elif hit.matcher_allowed %}
+          <a href="{{ hit.next_state_url() }}" class="btn-run">
+            <i class="fa fa-link" aria-hidden="true"></i> Run matcher
+          </a>
+        {% endif %}
+
+        {% if hit.show_browse_link() %}
+          <a href="{{ hit.browse_url() }}" class="btn-browse">
+            <i class="fa fa-sitemap" aria-hidden="true"></i> Browse subdivisions
+          </a>
+        {% endif %}
+
+        <a href="{{ hit.osm_url }}" target="_blank" class="link-osm">
+          OSM <i class="fa fa-external-link" aria-hidden="true"></i>
+        </a>
+      </div>
+
     </div>
   </div>
 {% endfor %}
-

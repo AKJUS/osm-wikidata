@@ -1,21 +1,291 @@
 {% extends "base.html" %}
 
+{% block style %}
+<style>
+:root {
+  --navy:        #1a2035;
+  --navy-light:  #232c47;
+  --amber:       #c8973e;
+  --amber-bright:#dba94e;
+  --cream:       #e8dcc8;
+  --cream-muted: rgba(232, 220, 200, 0.55);
+}
+
+/* ── Hero ──────────────────────────────────────────────── */
+
+#owl-hero {
+  background-color: var(--navy);
+  background-image:
+    radial-gradient(ellipse at 15% 55%, rgba(200,151,62,.07) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(80,110,200,.07) 0%, transparent 50%);
+  padding: 4rem 0 3.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Topographic-ring watermark */
+#owl-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-radial-gradient(circle at 72% 58%,
+      transparent 0, transparent 38px,
+      rgba(200,151,62,.045) 38px, rgba(200,151,62,.045) 39px),
+    repeating-radial-gradient(circle at 18% 28%,
+      transparent 0, transparent 55px,
+      rgba(200,151,62,.03) 55px, rgba(200,151,62,.03) 56px);
+  pointer-events: none;
+}
+
+/* ── Owl mark ──────────────────────────────────────────── */
+
+.owl-mark {
+  margin-bottom: 1rem;
+}
+
+/* ── Title & acronym ───────────────────────────────────── */
+
+.owl-title {
+  font-family: 'Lora', Georgia, serif;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin-bottom: 0.5rem;
+}
+
+.owl-title .owl-o { color: var(--amber); }
+.owl-title .owl-w { color: var(--amber); }
+.owl-title .owl-l { color: var(--amber); }
+
+.owl-acronym {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--cream-muted);
+  margin-bottom: 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.6rem;
+}
+
+.owl-acronym .hi { color: var(--amber); font-weight: 500; }
+
+.owl-tagline {
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--cream);
+  opacity: .82;
+  margin-bottom: 2rem;
+}
+
+/* ── Search form ───────────────────────────────────────── */
+
+.owl-search {
+  display: flex;
+  max-width: 500px;
+}
+
+.owl-search input[type="text"] {
+  flex: 1;
+  background: rgba(255,255,255,.07);
+  border: 2px solid rgba(200,151,62,.35);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  color: #fff;
+  font-size: 1rem;
+  padding: .6rem 1rem;
+  transition: background .2s, border-color .2s;
+  -webkit-appearance: none;
+}
+
+.owl-search input[type="text"]::placeholder {
+  color: rgba(232,220,200,.3);
+}
+
+.owl-search input[type="text"]:focus {
+  outline: none;
+  background: rgba(255,255,255,.12);
+  border-color: var(--amber);
+  color: #fff;
+}
+
+.owl-search button {
+  background: var(--amber);
+  border: 2px solid var(--amber);
+  border-radius: 0 4px 4px 0;
+  color: var(--navy);
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: .82rem;
+  font-weight: 500;
+  letter-spacing: .07em;
+  padding: .6rem 1.3rem;
+  transition: background .18s, border-color .18s;
+  white-space: nowrap;
+}
+
+.owl-search button:hover {
+  background: var(--amber-bright);
+  border-color: var(--amber-bright);
+}
+
+/* ── Steps ─────────────────────────────────────────────── */
+
+#owl-steps {
+  background: #f5f3ee;
+  padding: 2.75rem 0 2.5rem;
+  border-top: 1px solid #e0dbd0;
+}
+
+.steps-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.step {
+  flex: 1;
+  min-width: 160px;
+  max-width: 220px;
+  text-align: center;
+  padding: 1rem 1.25rem;
+}
+
+.step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: .18em;
+  color: var(--amber);
+  margin-bottom: .7rem;
+  text-transform: uppercase;
+}
+
+.step-icon {
+  font-size: 1.6rem;
+  color: var(--navy);
+  opacity: .65;
+  margin-bottom: .6rem;
+}
+
+.step-name {
+  font-family: 'Lora', Georgia, serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a2035;
+  margin-bottom: .3rem;
+}
+
+.step-desc {
+  font-size: .82rem;
+  color: #666;
+  line-height: 1.55;
+}
+
+.step-sep {
+  display: flex;
+  align-items: center;
+  padding-top: 1.1rem;
+  color: #c8c0b0;
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) { .step-sep { display: none; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="jumbotron jumbotron-fluid">
+{% include "flash_msg.html" %}
+
+<section id="owl-hero">
   <div class="container">
-  {% include "flash_msg.html" %}
-  <h1 class="display-3">OSM ↔ Wikidata matcher</h1>
-  <p class="lead">Two great projects cataloguing the world, even more powerful when linked together.</p>
-  <hr class="my-4">
-  <p>Search for a place, pick one and leave the matcher to run for a few minutes. Then check out the list of matches.</p>
+    <div class="row">
+      <div class="col-lg-9 col-xl-8">
 
-<form action="{{ url_for('search_results') }}" class="form-inline">
-  <label for="q" class="sr-only">search:</label>
-  <input class="form-control form-control-lg m-2" id="q" name="q" size="40" value="{{ q }}" placeholder="place name">
-  <input type="submit" class="btn btn-success btn-lg" value="search">
-</form>
+        <!-- Owl mark -->
+        <div class="owl-mark" aria-hidden="true">
+          <svg width="46" height="46" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <!-- body -->
+            <ellipse cx="24" cy="31" rx="13" ry="13" fill="#c8973e" opacity=".75"/>
+            <!-- head -->
+            <circle cx="24" cy="18" r="12" fill="#c8973e" opacity=".9"/>
+            <!-- ear tufts -->
+            <polygon points="15,8 11.5,1 18.5,6" fill="#b07828"/>
+            <polygon points="33,8 36.5,1 29.5,6" fill="#b07828"/>
+            <!-- eye whites -->
+            <circle cx="19" cy="16" r="5.5" fill="white"/>
+            <circle cx="29" cy="16" r="5.5" fill="white"/>
+            <!-- irises -->
+            <circle cx="19" cy="16" r="3.8" fill="#1a2035"/>
+            <circle cx="29" cy="16" r="3.8" fill="#1a2035"/>
+            <!-- highlights -->
+            <circle cx="20.2" cy="14.8" r="1.1" fill="white"/>
+            <circle cx="30.2" cy="14.8" r="1.1" fill="white"/>
+            <!-- beak -->
+            <polygon points="24,20.5 21.5,24.5 26.5,24.5" fill="#b07828"/>
+          </svg>
+        </div>
 
-</div>
-</div>
+        <h1 class="owl-title">
+          <span class="owl-o">O</span><span class="owl-w">W</span><span class="owl-l">L</span> Places
+        </h1>
+        <div class="owl-acronym">
+          <span><span class="hi">O</span>penStreetMap</span>
+          <span><span class="hi">W</span>ikidata</span>
+          <span><span class="hi">L</span>ink</span>
+        </div>
+        <p class="owl-tagline">Match OSM objects to Wikidata items — one place at a time.</p>
+
+        <form action="{{ url_for('search_results') }}" class="owl-search">
+          <label for="q" class="sr-only">Search for a place</label>
+          <input type="text" id="q" name="q" value="{{ q|default('') }}"
+                 placeholder="Search for a place…" autocomplete="off" autofocus>
+          <button type="submit">
+            <i class="fa fa-search" aria-hidden="true"></i> Search
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="owl-steps">
+  <div class="container">
+    <div class="steps-row">
+
+      <div class="step">
+        <div class="step-num">Step 01</div>
+        <div class="step-icon"><i class="fa fa-search" aria-hidden="true"></i></div>
+        <div class="step-name">Search</div>
+        <p class="step-desc">Type the name of any city, town, district, or region.</p>
+      </div>
+
+      <div class="step-sep"><i class="fa fa-angle-right" aria-hidden="true"></i></div>
+
+      <div class="step">
+        <div class="step-num">Step 02</div>
+        <div class="step-icon"><i class="fa fa-link" aria-hidden="true"></i></div>
+        <div class="step-name">Match</div>
+        <p class="step-desc">The matcher pairs OSM objects with their Wikidata counterparts.</p>
+      </div>
+
+      <div class="step-sep"><i class="fa fa-angle-right" aria-hidden="true"></i></div>
+
+      <div class="step">
+        <div class="step-num">Step 03</div>
+        <div class="step-icon"><i class="fa fa-check-circle" aria-hidden="true"></i></div>
+        <div class="step-name">Review</div>
+        <p class="step-desc">Browse the candidates and save <code>wikidata=</code> tags to OSM.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 {% endblock %}
