@@ -346,6 +346,14 @@ class MatcherJob:
         self.send("done")
         print("done sent")
 
+    def handle_rate_limited(self, exc: wikidata_api.QueryRateLimited) -> None:
+        """Handle a 429 rate-limit response from the Wikidata Query Service."""
+        retry_after = exc.retry_after
+        msg = f"Wikidata rate limited, waiting {retry_after} seconds before retrying"
+        print(msg)
+        self.status(msg)
+        sleep(retry_after)
+
     def wikidata_chunked(self, chunks):
         assert self.place
         items = {}
@@ -365,6 +373,10 @@ class MatcherJob:
                 print(msg)
                 self.status(msg)
                 chunks += bbox_chunk(bbox, 2)
+            except wikidata_api.QueryRateLimited as e:
+                chunks.append(bbox)  # put back to retry after waiting
+                num -= 1
+                self.handle_rate_limited(e)
 
         return items
 
@@ -404,14 +416,19 @@ class MatcherJob:
         chunk_size = place.wikidata_chunk_size(size=size)
         if chunk_size == 1:
             print("wikidata unchunked")
-            try:
-                wikidata_items = place.bbox_wikidata_items(want_isa=self.want_isa)
-            except wikidata_api.QueryTimeout:
-                place.wikidata_query_timeout = True
-                database.session.commit()
-                chunk_size = 2
-                msg = "wikidata query timeout, retrying with smaller chunks."
-                self.status(msg)
+            while True:
+                try:
+                    wikidata_items = place.bbox_wikidata_items(want_isa=self.want_isa)
+                    break
+                except wikidata_api.QueryTimeout:
+                    place.wikidata_query_timeout = True
+                    database.session.commit()
+                    chunk_size = 2
+                    msg = "wikidata query timeout, retrying with smaller chunks."
+                    self.status(msg)
+                    break
+                except wikidata_api.QueryRateLimited as e:
+                    self.handle_rate_limited(e)
 
         if chunk_size != 1:
             chunks = list(place.polygon_chunk(size=size))

@@ -37,6 +37,15 @@ class QueryTimeout(QueryError):
     """Query timeout error."""
 
 
+class QueryRateLimited(QueryError):
+    """Too many requests — rate limited by the Wikidata Query Service."""
+
+    @property
+    def retry_after(self) -> int:
+        """Seconds to wait before retrying (from Retry-After header, default 60)."""
+        return int(self.r.headers.get("Retry-After", 60))
+
+
 def api_call(params: CallParams) -> requests.Response:
     """Call the wikidata API."""
     call_params: CallParams = {
