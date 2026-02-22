@@ -40,7 +40,103 @@ body, html {
 
 #mapid { height: 100%; }
 
-.error { background: red; color: white; padding: 3px; }
+/* ── Pipeline stage tracker ───────────────────────── */
+
+#stages {
+  border: 1px solid #dee2e6;
+  border-radius: .375rem;
+  padding: 4px 10px;
+}
+
+.stage {
+  display: flex;
+  align-items: flex-start;
+  padding: 7px 0;
+  font-size: .875rem;
+}
+
+.stage + .stage {
+  border-top: 1px solid #f0f0f0;
+}
+
+.stage-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ced4da;
+  flex-shrink: 0;
+  margin-right: 10px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.stage-body { flex: 1; }
+
+.stage-label { color: #adb5bd; }
+
+/* Active: spinning border */
+.stage.active .stage-icon {
+  border-color: #007bff;
+  border-top-color: transparent;
+  animation: spin .8s linear infinite;
+}
+
+.stage.active .stage-label {
+  color: #343a40;
+  font-weight: 600;
+}
+
+/* Done: filled green circle with tick */
+.stage.done .stage-icon {
+  background: #28a745;
+  border-color: #28a745;
+  color: #fff;
+}
+
+.stage.done .stage-label { color: #28a745; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Activity (rolling item-level messages) ───────── */
+
+#activity-wrap {
+  border-left: 3px solid #007bff;
+  padding-left: 8px;
+}
+
+#activity-line {
+  font-size: .8rem;
+  color: #6c757d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Message log ──────────────────────────────────── */
+
+#message-log { font-size: .78rem; }
+
+.log-entry {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid #f8f9fa;
+  color: #495057;
+}
+
+.log-time {
+  color: #adb5bd;
+  font-family: monospace;
+  font-size: .7rem;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.log-warn  { color: #856404; }
+.log-error { color: #dc3545; }
 
 </style>
 
@@ -57,22 +153,61 @@ body, html {
 
   <div>
     <div class="col col2 p-3">
-      <div id="wrapper">
-        <div id="messages">
-          <h1>{{ place.name }}</h1>
-          <p>{{ place.name_extra_detail }}</p>
-          <p id="chunk-msg">
-            Split into {{ place.chunk_count() }} chunks.
-          </p>
-          <p id="empty-msg" class="d-none">
-            Split into {{ place.chunk_count() }} chunks, of which <span id="empty-count"></span> are empty.
-          </p>
 
-          <div>current: <span id="current"></span></div>
+      <h5 class="mb-1">{{ place.name }}</h5>
+      {% if place.name_extra_detail %}
+      <p class="text-muted small mb-3">{{ place.name_extra_detail }}</p>
+      {% endif %}
 
-          <div id="messages"></div>
+      <!-- Pipeline stage tracker -->
+      <div id="stages" class="mb-3">
+
+        <div class="stage" id="stage-wikidata">
+          <div class="stage-icon"></div>
+          <div class="stage-body">
+            <div class="stage-label">Fetch Wikidata items</div>
+          </div>
         </div>
+
+        <div class="stage" id="stage-details">
+          <div class="stage-icon"></div>
+          <div class="stage-body">
+            <div class="stage-label">Load item details</div>
+          </div>
+        </div>
+
+        <div class="stage" id="stage-overpass">
+          <div class="stage-icon"></div>
+          <div class="stage-body">
+            <div class="stage-label">Download OSM data</div>
+            <div id="overpass-progress" class="d-none mt-1">
+              <div class="progress mt-1" style="height: 4px;">
+                <div id="chunk-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+              </div>
+              <small id="chunk-progress-text" class="text-muted"></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage" id="stage-matching">
+          <div class="stage-icon"></div>
+          <div class="stage-body">
+            <div class="stage-label">Find matches</div>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Rolling activity line (item-level progress) -->
+      <div id="activity-wrap" class="mb-2 d-none">
+        <div id="activity-line"></div>
+      </div>
+
+      <hr class="mt-0 mb-2">
+
+      <!-- Timestamped message log -->
+      <div id="message-log"></div>
+
     </div>
     <div class="col col1">
       <div id="mapid"></div>
@@ -91,6 +226,7 @@ var osm_type = {{ place.osm_type | tojson }};
 var osm_id = {{ place.osm_id | tojson }};
 var chunk_geojson = [{{ place.geojson_chunks() | join(',') | safe }}];
 var matcher_done_url = {{ matcher_done_url | tojson }};
+var total_chunks = {{ place.chunk_count() }};
 var empty_layers = [];
 </script>
 
