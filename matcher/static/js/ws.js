@@ -78,6 +78,21 @@ function updateChunkProgress() {
     chunksDone + '\u202f/\u202f' + chunksNonEmpty + ' chunks';
 }
 
+/* ── Matching progress ──────────────────────────────────────── */
+
+var matchingTotal = 0;
+
+function showMatchingProgress() {
+  document.getElementById('matching-progress').classList.remove('d-none');
+}
+
+function updateMatchingProgress(num, total) {
+  var pct = Math.round(num / total * 100);
+  document.getElementById('matching-progress-bar').style.width = pct + '%';
+  document.getElementById('matching-progress-text').textContent =
+    num + '\u202f/\u202f' + total + ' items';
+}
+
 /* ── WebSocket handlers ─────────────────────────────────────── */
 
 connection.onopen = function() {
@@ -178,6 +193,16 @@ connection.onmessage = function(e) {
       } else {
         logMessage(text);
       }
+      break;
+
+    case 'matching_start':
+      matchingTotal = data.total;
+      showMatchingProgress();
+      updateMatchingProgress(0, data.total);
+      break;
+
+    case 'matching_progress':
+      updateMatchingProgress(data.num, data.total);
       break;
 
     case 'item':

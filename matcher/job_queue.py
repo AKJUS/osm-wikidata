@@ -532,13 +532,19 @@ class MatcherJob:
 
     def run_matcher(self) -> None:
         """Run the matcher."""
+        assert self.place
+        total = self.place.items.count()
+        self.send("matching_start", total=total)
+        checked = 0
 
         def progress(candidates, item):
+            nonlocal checked
+            checked += 1
             num = len(candidates)
             noun = "candidate" if num == 1 else "candidates"
             count = f": {num} {noun} found"
             msg = item.label_and_qid() + count
             self.item_line(msg)
+            self.send("matching_progress", num=checked, total=total)
 
-        assert self.place
         self.place.run_matcher(progress=progress, want_isa=self.want_isa)
