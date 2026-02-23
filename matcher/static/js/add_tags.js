@@ -21,6 +21,8 @@ function start_upload() {
     }
 
     $('#comment').prop('disabled', true);
+    $('#source').prop('disabled', true);
+    $('#hashtags').prop('disabled', true);
     $('#save').prop('disabled', true);
     $('#status').text('opening changeset');
 
@@ -43,7 +45,12 @@ function start_upload() {
     connection = new WebSocket(url);
 
     connection.onopen = function () {
-        send({'comment': comment, 'matches': to_upload});
+        send({
+            'comment': comment,
+            'source': $('#source').val(),
+            'hashtags': $('#hashtags').val(),
+            'matches': to_upload,
+        });
     };
 
     // Log errors

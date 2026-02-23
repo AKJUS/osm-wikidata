@@ -12,15 +12,17 @@ really_save = True
 osm_api_base = "https://api.openstreetmap.org/api/0.6"
 
 
-def new_changeset(comment: str) -> str:
-    """XML string for a new changeset with the given comment."""
-    return f"""
-<osm>
-  <changeset>
-    <tag k="created_by" v="https://osm.wikidata.link/"/>
-    <tag k="comment" v="{html.escape(comment)}"/>
-  </changeset>
-</osm>"""
+def new_changeset(comment: str, extra_tags: dict[str, str] | None = None) -> str:
+    """XML string for a new changeset with the given comment and optional extra tags."""
+    tag_lines = [
+        '    <tag k="created_by" v="https://osm.wikidata.link/"/>',
+        f'    <tag k="comment" v="{html.escape(comment)}"/>',
+    ]
+    for k, v in (extra_tags or {}).items():
+        if v:
+            tag_lines.append(f'    <tag k="{html.escape(k)}" v="{html.escape(v)}"/>')
+    tags = "\n".join(tag_lines)
+    return f"<osm>\n  <changeset>\n{tags}\n  </changeset>\n</osm>"
 
 
 def osm_request(path: str, **kwargs: dict):

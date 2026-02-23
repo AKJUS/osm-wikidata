@@ -261,7 +261,11 @@ def add_tags(ws_sock, osm_type, osm_id):
 
     data = json.loads(ws_sock.receive())
     comment = data["comment"]
-    changeset = edit.new_changeset(comment)
+    extra_tags: dict[str, str] = {}
+    for key in ("source", "hashtags"):
+        if data.get(key):
+            extra_tags[key] = data[key]
+    changeset = edit.new_changeset(comment, extra_tags)
     r = edit.create_changeset(changeset)
     reply = r.text.strip()
 
