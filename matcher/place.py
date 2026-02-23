@@ -198,7 +198,9 @@ class Place(Base):
             return place
 
         try:
-            hit = nominatim.reverse(osm_type, osm_id)
+            hit = nominatim.lookup_by_osm(osm_type, osm_id)
+            if hit is None:
+                hit = nominatim.reverse(osm_type, osm_id)
         except nominatim.SearchError:
             return None
         place = Place.from_nominatim(hit)

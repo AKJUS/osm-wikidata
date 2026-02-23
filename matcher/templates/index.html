@@ -133,6 +133,23 @@
   border-color: var(--amber-bright);
 }
 
+/* ── Search hint ───────────────────────────────────────── */
+
+.owl-search-hint {
+  margin-top: .6rem;
+  font-size: .72rem;
+  color: var(--cream-muted);
+  font-family: 'DM Mono', monospace;
+}
+
+.owl-search-hint code {
+  color: var(--amber);
+  background: rgba(200,151,62,.12);
+  padding: .1em .35em;
+  border-radius: 3px;
+  font-size: .95em;
+}
+
 /* ── Steps ─────────────────────────────────────────────── */
 
 #owl-steps {
@@ -249,6 +266,10 @@
             <i class="fa fa-search" aria-hidden="true"></i> Search
           </button>
         </form>
+        <p class="owl-search-hint">
+          Also accepts <code>relation/12345</code>, <code>way/12345</code>,
+          openstreetmap.org URLs, or Wikidata QIDs
+        </p>
 
       </div>
     </div>

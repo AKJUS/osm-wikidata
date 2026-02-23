@@ -824,7 +824,7 @@ def export_place(osm_type, osm_id):
 
 
 def redirect_to_candidates(osm_type, osm_id):
-    place = Place.get_or_abort(osm_type, osm_id)
+    place = Place.from_osm(osm_type, osm_id)
     if not place:
         abort(404)
 
@@ -1494,6 +1494,14 @@ def search_results():
     url = search.check_for_search_identifier(q)
     if url:
         return redirect(url)
+
+    # If the query looks like relation/N or an OSM URL but we couldn't find it
+    # in Nominatim, show a specific error rather than falling through to a name
+    # search that will return nothing.
+    if search.is_place_identifier(q):
+        return render_template(
+            "results_page.html", results=[], q=q, identifier_not_found=True
+        )
 
     try:
         results = search.run(q)

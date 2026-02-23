@@ -89,6 +89,34 @@ def get_us_city(name: str, state: str) -> Hit | None:
     return hit
 
 
+def lookup_by_osm(osm_type: str, osm_id: int) -> dict[str, typing.Any] | None:
+    """Look up a single OSM object via the Nominatim /lookup endpoint."""
+    url = "https://nominatim.openstreetmap.org/lookup"
+    osm_prefix = osm_type[0].upper()
+    params = {
+        "osm_ids": f"{osm_prefix}{osm_id}",
+        "format": "jsonv2",
+        "addressdetails": 1,
+        "email": current_app.config["ADMIN_EMAIL"],
+        "extratags": 1,
+        "namedetails": 1,
+        "accept-language": "en",
+        "polygon_text": 1,
+    }
+    r = requests.get(url, params=params, headers=user_agent_headers())
+    if r.status_code == 500:
+        raise SearchError
+
+    try:
+        hits: list[dict[str, typing.Any]] = json.loads(
+            r.text, object_pairs_hook=OrderedDict
+        )
+    except json.decoder.JSONDecodeError:
+        raise SearchError(r)
+
+    return hits[0] if hits else None
+
+
 def reverse(osm_type: str, osm_id: int, polygon_text: int = 1) -> dict[str, typing.Any]:
     """Reverse geocode using nominatim."""
     url = "https://nominatim.openstreetmap.org/reverse"

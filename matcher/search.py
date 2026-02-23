@@ -8,6 +8,7 @@ from .model import PageBanner
 from .place import Place
 
 re_place_identifier = re.compile(r"^(node|way|relation)/(\d+)$")
+re_osm_url = re.compile(r"https?://(?:www\.)?openstreetmap\.org/(relation|way|node)/(\d+)")
 re_qid = re.compile(r"^(Q\d+)$")
 
 NominatimResults = list[dict[str, typing.Any]]
@@ -194,9 +195,15 @@ def update_search_results(results: NominatimResults) -> None:
         database.session.commit()
 
 
+def is_place_identifier(q: str) -> bool:
+    """Return True if q looks like a place identifier (relation/N, way/N, or OSM URL)."""
+    q = q.strip()
+    return bool(re_place_identifier.match(q) or re_osm_url.search(q))
+
+
 def check_for_place_identifier(q: str):
     q = q.strip()
-    m = re_place_identifier.match(q)
+    m = re_place_identifier.match(q) or re_osm_url.search(q)
     if not m:
         return
     osm_type, osm_id = m.groups()

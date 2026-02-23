@@ -247,7 +247,9 @@
     </form>
     {% if q %}
     <div class="results-count">
-      {% if results | count == 0 %}
+      {% if identifier_not_found %}
+        not found in Nominatim: &ldquo;{{ q }}&rdquo;
+      {% elif results | count == 0 %}
         no results for &ldquo;{{ q }}&rdquo;
       {% elif results | count == 1 %}
         1 place found for &ldquo;{{ q }}&rdquo;
@@ -263,7 +265,13 @@
   {% include "flash_msg.html" %}
 
   {% if q %}
-    {% if results | count == 0 %}
+    {% if identifier_not_found %}
+      <div class="no-results">
+        <div class="no-results-icon"><i class="fa fa-question-circle-o" aria-hidden="true"></i></div>
+        <p><strong>{{ q }}</strong> was not found in Nominatim.</p>
+        <p>The place may not exist, or Nominatim may not have indexed it yet.</p>
+      </div>
+    {% elif results | count == 0 %}
       <div class="no-results">
         <div class="no-results-icon"><i class="fa fa-map-o" aria-hidden="true"></i></div>
         <p>No places found for <strong>{{ q }}</strong>.</p>
