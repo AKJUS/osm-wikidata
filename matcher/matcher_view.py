@@ -45,7 +45,7 @@ def matcher_progress(osm_type: str, osm_id: int) -> werkzeug.wrappers.Response |
     if place.state == "ready":
         return flask.redirect(place.candidates_url())
 
-    if place.too_big or place.too_complex:
+    if place.bad_geom_type or place.too_big or place.too_complex:
         return flask.render_template("too_big.html", place=place)
 
     is_refresh = place.state == "refresh"

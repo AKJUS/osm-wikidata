@@ -140,6 +140,9 @@ class Hit:
         if self.place and not self.place.allowed_cat:
             return "matcher only works with place or boundary"
 
+        if self.place and self.place.bad_geom_type:
+            return "geometry is not a closed polygon (the way is not a closed ring)"
+
         if self.osm_type not in ("way", "relation") or not self.area:
             return None
 
