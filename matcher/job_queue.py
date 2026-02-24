@@ -330,6 +330,13 @@ class MatcherJob:
             self.send("done")
             return
 
+        if self.place.bad_geom_type:
+            self.send(
+                "error",
+                msg=f"geometry is not a polygon ({self.place.geometry_type}) — the boundary is not a closed ring",
+            )
+            return
+
         is_refresh = self.place.state == "refresh"
 
         user = model.User.query.get(self.user_id) if self.user_id else None

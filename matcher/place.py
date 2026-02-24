@@ -5,6 +5,7 @@ import os.path
 import re
 import subprocess
 import typing
+from urllib.parse import urlparse, urlunparse
 from collections import Counter
 from decimal import Decimal
 from time import time
@@ -693,6 +694,14 @@ class Place(Base):
         if filename is None:
             filename = self.overpass_filename
         style = os.path.join(current_app.config["DATA_DIR"], "matcher.style")
+        # Strip password from the URL — PGPASSWORD is passed via the environment.
+        parsed = urlparse(current_app.config["DB_URL"])
+        netloc = parsed.hostname or ""
+        if parsed.port:
+            netloc += f":{parsed.port}"
+        if parsed.username:
+            netloc = f"{parsed.username}@{netloc}"
+        safe_db_url = urlunparse(parsed._replace(netloc=netloc))
         return [
             "osm2pgsql",
             "--create",
@@ -704,7 +713,7 @@ class Place(Base):
             "--cache=500",
             "--style=" + style,
             "--multi-geometry",
-            "--database=" + current_app.config["DB_URL"],
+            "--database=" + safe_db_url,
             filename,
         ]
 

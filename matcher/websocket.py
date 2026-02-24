@@ -63,6 +63,13 @@ def ws_matcher(ws_sock, osm_type, osm_id):
             send(json.dumps({"type": "already_done"}))
             return
 
+        if place.bad_geom_type:
+            send(json.dumps({
+                "type": "error",
+                "msg": f"geometry is not a polygon ({place.geometry_type}) — the boundary is not a closed ring",
+            }))
+            return
+
         user_agent = request.headers.get("User-Agent")
         user_id = current_user.id if current_user.is_authenticated else None
 
